@@ -1,0 +1,160 @@
+---
+title: "Projeto de Diabetes Kaggle"
+author: "Erick De Rossi Faria"
+date: "2022-12"
+output: pdf_document
+---
+
+**Breve descrição:**
+
+Esse projeto busca classificar se um paciente possue ou não diabetes dadas
+certas covariáveis.
+
+O banco de dados é, originalmente, do National Institute of Diabetes and Digestive
+and Kidney Diseases.
+
+**Variáveis:**
+
+***
+
+# 1) Análise Descritiva:
+
+
+```{r importando, message=F, fig.show="hold", out.width="50%"}
+library(readr)
+library(ggplot2)
+library(dplyr)
+
+#importando
+banco <- read_csv("diabetes.csv")
+
+#histograma/barras das variáveis:
+ggplot(data = banco, aes(x = Pregnancies)) +
+  geom_histogram(bins=17, fill='lightblue', color ='blue')+
+  ggtitle("Número de gravides")+
+  labs(x = 'Gravides', y = 'Quantidade')
+
+ggplot(data = banco, aes(x = Glucose)) +
+  geom_histogram(fill='lightblue', color ='blue')+
+  ggtitle("Concentração de glicose")+
+  labs(x = 'Glicose', y = 'Quantidade')
+
+ggplot(data = banco, aes(x = BloodPressure)) +
+  geom_histogram(fill='lightblue', color ='blue')+
+  ggtitle("Pressão sanguínea")+
+  labs(x = 'Pressão', y = 'Quantidade')
+
+###barras
+resul <- as.data.frame(table(banco$Outcome))
+levels(resul$Var1) <- c('Não diabético','Diabético')
+names(resul) <- c('Resultado','Quantidade')
+
+ggplot(resul, aes(x = Resultado, y = Quantidade, fill = Resultado)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values=c("#56ddc5", "#4699dd"))+
+  geom_text(aes(label = Quantidade), vjust = 1.5)
+
+rm(resul)
+```
+
+O histograma das covariáveis é só um exemplo de código, não há nenhuma suposição
+em relação a sua distribuição nos algoritmos considerados posteriormente.
+
+O fato de termos um gráfico de barras que mostra uma propoção razoável entre
+pessoas com diabetes e sem na distribuição é importante para a performance do
+algoritmo.
+
+```{r relacao, message=F, fig.show="hold", out.width="50%"}
+
+#relação entre diabetes e variável:
+ggplot(banco, aes(Pregnancies, Outcome, color = Outcome)) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE) +
+  theme_minimal()+
+  scale_color_gradient(low = "#56ddc5", high ="#4699dd")+
+  ggtitle('Gravides x Diabetes')+
+  geom_vline(xintercept = 13.5, linetype="dotted", 
+                color = "red", size=1.5)
+
+ggplot(banco, aes(Glucose, Outcome, color = Outcome)) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE) +
+  theme_minimal()+
+  scale_color_gradient(low = "#56ddc5", high ="#4699dd")+
+  ggtitle('Glicose x Diabetes')+
+  geom_vline(xintercept = 75.5, linetype="dotted", 
+                color = "red", size=1.5)
+
+ggplot(banco, aes(BloodPressure, Outcome, color = Outcome)) +
+  geom_point(shape = 16, size = 3, show.legend = FALSE) +
+  theme_minimal()+
+  scale_color_gradient(low = "#56ddc5", high ="#4699dd")+
+  ggtitle('Pressão x Diabetes')
+
+#correlogram
+corrplot2 <- function(data,
+                      method = "pearson",
+                      sig.level = 0.05,
+                      order = "original",
+                      diag = FALSE,
+                      type = "upper",
+                      tl.srt = 90,
+                      number.font = 1,
+                      number.cex = 1,
+                      mar = c(0, 0, 0, 0)) {
+  library(corrplot)
+  data_incomplete <- data
+  data <- data[complete.cases(data), ]
+  mat <- round(cor(data, method = method),1) #diminui as casas decimais
+  cor.mtest <- function(mat, method) {
+    mat <- as.matrix(mat)
+    n <- ncol(mat)
+    p.mat <- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    for (i in 1:(n - 1)) {
+      for (j in (i + 1):n) {
+        tmp <- cor.test(mat[, i], mat[, j], method = method)
+        p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+      }
+    }
+    colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+    p.mat
+  }
+  p.mat <- cor.mtest(data, method = method)
+  col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+  corrplot(mat,
+    method = "color", col = col(200), number.font = number.font,
+    mar = mar, number.cex = number.cex,
+    type = type, order = order,
+    addCoef.col = "black", # add correlation coefficient
+    tl.col = "black", tl.srt = tl.srt, # rotation of text labels
+    # combine with significance level
+    p.mat = p.mat, sig.level = sig.level, insig = "blank",
+    # hide correlation coefficients on the diagonal
+    diag = diag
+  )
+}
+
+corrplot2(
+  data = banco,
+  method = "pearson",
+  sig.level = 0.05,
+  order = "original",
+  diag = F,
+  type = "upper",
+  tl.srt = 45
+)
+```
+
+As variáveis são fracamente correlacionadas, implicando não haver motivo para
+aplicar análise de componentes principais.
+
+***
+
+# 2) Regressão Logística:
+
+```{r regressao logistica}
+#dados para ajuste
+
+#dados para validação
+
+```
+
