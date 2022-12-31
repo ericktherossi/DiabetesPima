@@ -155,6 +155,6 @@ aplicar análise de componentes principais.
 #dados para ajuste
 
 #dados para validação
-
+print('hello, world')
 ```
 
